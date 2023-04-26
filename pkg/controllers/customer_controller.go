@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/biter777/countries"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
@@ -44,14 +45,18 @@ func GetCustomerById(w http.ResponseWriter, r *http.Request) {
 func CreateCustomer(w http.ResponseWriter, r *http.Request) {
 	CreateCustomer := &models.Customer{}
 	utils.ParseBody(r, CreateCustomer)
+	if countries.ByName(CreateCustomer.Customer_Country_Code) == 0 {
+		http.Error(w, "400 Bad Request: Country Code Invalid or Missing", http.StatusBadRequest)
+		return
+	}
 	c, err := CreateCustomer.CreateCustomer()
 	if err != nil {
 		http.Error(w, "400 Bad Request: " + err.Error(), http.StatusBadRequest)
-	} else {
-		res, _ := json.Marshal(c)
-		w.WriteHeader(http.StatusCreated)
-		w.Write(res)
+		return
 	}
+	res, _ := json.Marshal(c)
+	w.WriteHeader(http.StatusCreated)
+	w.Write(res)
 }
 
 func DeleteCustomer(w http.ResponseWriter, r *http.Request) {
@@ -98,7 +103,7 @@ func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 	if updateCustomer.Customer_Name != "" {
 		customerDetails.Customer_Name = updateCustomer.Customer_Name
 	}
-	if updateCustomer.Customer_Country_Code != "" {
+	if updateCustomer.Customer_Country_Code != "" && countries.ByName(updateCustomer.Customer_Country_Code) != 0 {
 		customerDetails.Customer_Country_Code = updateCustomer.Customer_Country_Code
 	}
 	if updateCustomer.Customer_State != "" {

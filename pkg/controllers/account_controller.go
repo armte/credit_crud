@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/biter777/countries"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
@@ -44,14 +45,18 @@ func GetAccountById(w http.ResponseWriter, r *http.Request) {
 func CreateAccount(w http.ResponseWriter, r *http.Request) {
 	CreateAccount := &models.Account{}
 	utils.ParseBody(r, CreateAccount)
+	if countries.ByName(CreateAccount.Account_Country_Code) == 0 {
+		http.Error(w, "400 Bad Request: Country Code Invalid or Missing", http.StatusBadRequest)
+		return
+	}
 	c, err := CreateAccount.CreateAccount()
 	if err != nil {
 		http.Error(w, "400 Bad Request: " + err.Error(), http.StatusBadRequest)
-	} else {
-		res, _ := json.Marshal(c)
-		w.WriteHeader(http.StatusCreated)
-		w.Write(res)
+		return
 	}
+	res, _ := json.Marshal(c)
+	w.WriteHeader(http.StatusCreated)
+	w.Write(res)
 }
 
 func DeleteAccount(w http.ResponseWriter, r *http.Request) {
@@ -98,7 +103,7 @@ func UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	if updateAccount.Account_Postal_Code != "" {
 		accountDetails.Account_Postal_Code = updateAccount.Account_Postal_Code
 	}
-	if updateAccount.Account_Country_Code != "" {
+	if updateAccount.Account_Country_Code != "" && countries.ByName(updateAccount.Account_Country_Code) != 0 {
 		accountDetails.Account_Country_Code = updateAccount.Account_Country_Code
 	}
 	if updateAccount.Customer_Number != 0 {
