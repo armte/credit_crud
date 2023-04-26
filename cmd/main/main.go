@@ -12,6 +12,6 @@ func main() {
 	r := mux.NewRouter()
 	routes.RegisterCreditCrudRoutes(r)
 	http.Handle("/", r)
-	fmt.Printf("Starting server at port 9010")
+	fmt.Println("Starting server at port 9010")
 	log.Fatal(http.ListenAndServe(":9010", r))
 }
